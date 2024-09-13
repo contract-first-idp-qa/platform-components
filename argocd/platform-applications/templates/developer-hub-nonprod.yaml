@@ -9,7 +9,7 @@ spec:
   project: default
   source:
     repoURL: "{{ .Values.gitHost }}/{{ .Values.gitOrg }}/platform-components.git"
-    path: charts/developer-hub-non-prod
+    path: charts/developer-hub-nonprod
     targetRevision: "{{ .Values.gitRef }}"
     helm:
       parameters:
