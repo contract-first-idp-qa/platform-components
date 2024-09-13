@@ -1,0 +1,69 @@
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: app-config-rhdh
+data:
+  app-config-rhdh.yaml: |
+    app:
+      title: Contract-First IDP
+      baseUrl: "https://backstage-backstage-developer-hub.{{ .Values.clusterRouterDomain }}"
+    
+    backend:
+      auth:
+        keys:
+          - secret: ${BACKEND_SECRET}
+      baseUrl: "https://backstage-backstage-developer-hub.{{ .Values.clusterRouterDomain }}"
+      cors:
+        origin: "https://backstage-backstage-developer-hub.{{ .Values.clusterRouterDomain }}"
+
+    signInPage: oidc
+
+    auth:
+      session:
+        secret: {{ .Values.auth.sessionSecret }}
+      environment: production
+      providers:
+        oidc:
+          production:
+            clientId: ${KEYCLOAK_CLIENT_ID}
+            clientSecret: ${KEYCLOAK_CLIENT_SECRET}
+            metadataUrl: ${KEYCLOAK_BASE_URL}/realms/${KEYCLOAK_REALM}/.well-known/openid-configuration
+            prompt: auto
+
+    integrations:
+      github:
+        - host: github.com
+          token: ${GIT_TOKEN}
+
+    catalog:
+      import:
+        entityFilename: catalog-info.yaml
+        pullRequestBranchName: backstage-integration
+      rules:
+        - allow: [Component, System, Group, Resource, Location, Template, API]
+      locations:
+        - type: url
+          target: https://github.com/{{ .Values.git.org }}/software-templates/blob/main/template-index.yaml
+      providers:
+        keycloakOrg:
+          production:
+            baseUrl: ${KEYCLOAK_BASE_URL}
+            loginRealm: ${KEYCLOAK_REALM}
+            realm: ${KEYCLOAK_REALM}
+            clientId: ${KEYCLOAK_CLIENT_ID}
+            clientSecret: ${KEYCLOAK_CLIENT_SECRET}
+            schedule:
+              frequency: { minutes: 1 }
+              timeout: { minutes: 1 }
+              initialDelay: { seconds: 15 }
+        github:
+          entities:
+            organization: '{{ .Values.git.org }}'
+            catalogPath: '/catalog-info.yaml'
+            filters:
+              branch: 'main'
+              repository: '.*'
+            schedule: # optional
+              frequency: { minutes: 1 }
+              timeout: { minutes: 1 }
+              initialDelay: { seconds: 15 }
